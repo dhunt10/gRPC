@@ -1,0 +1,17 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --build-arg
+      - VERSION=$_VERSION
+      - --build-arg
+      - SERVICE_NAME=$_SERVICE_NAME
+      - -t
+      - gcr.io/mercari-us-boston-ml/$_SERVICE_NAME:$_VERSION
+      - -t
+      - gcr.io/mercari-us-boston-ml/$_SERVICE_NAME
+      - .
+
+images:
+  - gcr.io/mercari-us-boston-ml/$_SERVICE_NAME
+  - gcr.io/mercari-us-boston-ml/$_SERVICE_NAME:$_VERSION
