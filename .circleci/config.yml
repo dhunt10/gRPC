@@ -1,6 +1,6 @@
 version: 2
 #defaults: &defaults
-  working_directory: /go/src/google.golang.org/grpc/examples/helloworld
+working_directory: /go/src/google.golang.org/grpc/examples/helloworld
 # reviewdog: &reviewdog
 #   <<: *defaults
 #   docker:
@@ -107,7 +107,7 @@ workflows:
   build-and-test:
     jobs:
       # - dep:
-           context: org-global
+      #     context: org-global
       # - lint:
       #     requires:
       #       - dep
