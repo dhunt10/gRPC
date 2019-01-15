@@ -1,6 +1,6 @@
 version: 2
 defaults: &defaults
-working_directory: /go/src/github.com/dhunt10/gRPC
+ working_directory: /go/src/github.com/dhunt10/gRPC
 # reviewdog: &reviewdog
 #   <<: *defaults
 #   docker:
