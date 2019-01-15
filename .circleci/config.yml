@@ -1,0 +1,129 @@
+version: 2
+defaults: &defaults
+  working_directory: /go/src/github.com/kouzoh/mercari-david-ml-test
+
+# reviewdog: &reviewdog
+#   <<: *defaults
+#   docker:
+#     - image: gcr.io/mercari-drone/reviewdog
+
+golang: &golang
+  <<: *defaults
+  docker:
+    - image: golang
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: /gcloud-service-key.json
+
+gcloud: &gcloud
+  <<: *defaults
+  docker:
+    - image: gcr.io/cloud-builders/gcloud
+      environment:
+        GOOGLE_APPLICATION_CREDENTIALS: /gcloud-service-key.json
+
+jobs:
+  # dep:
+  #   <<: *golang
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Make lock copy
+  #         command: |
+  #           cp Gopkg.lock Gopkg.fix
+  #     - restore_cache:
+  #         keys:
+  #           - vendor-{{ checksum "Gopkg.fix" }}
+  #     - run:
+  #         name: Install dependencies
+  #         command: |
+  #           echo "machine github.com login $GITHUB_TOKEN" > ~/.netrc
+  #           if [ ! -e vendor ]; then
+  #             make dep
+  #           fi
+  #     - save_cache:
+  #         key: vendor-{{ checksum "Gopkg.fix" }}
+  #         paths:
+  #           - vendor
+  #     - run:
+  #         name: Check compilation
+  #         command: |
+  #           make build
+  # lint:
+  #   <<: *reviewdog
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys:
+  #           - vendor-{{ checksum "Gopkg.lock" }}
+  #     - run:
+  #         name: Check codes are gofmted
+  #         command: |
+  #           gometalinter --vendor --disable-all --enable=gofmt ./...
+  #     - run:
+  #         name: Review with static analysis tools
+  #         command: |
+  #           reviewdog -reporter="github-pr-review"
+  # test:
+  #   <<: *golang
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         keys:
+  #           - vendor-{{ checksum "Gopkg.lock" }}
+  #     - run:
+  #         name: Test and collect coverages
+  #         command: |
+  #           echo "${MERCARI_ARTIFACT_CONTAINER_BUILDER_CREDENTIALS_JSON}" > ${GOOGLE_APPLICATION_CREDENTIALS}
+  #           make cover
+  #     - run:
+  #         name: Upload coverages to codecov
+  #         command: |
+  #           bash <(curl -s https://codecov.io/bash)
+
+  docker:
+    <<: *gcloud
+    steps:
+      - checkout
+      # - restore_cache:
+      #     keys:
+      #       - vendor-{{ checksum "Gopkg.lock" }}
+      - run:
+          name: Submit build task to container builder
+          command: |
+            # Authorize
+            echo "${MERCARI_ARTIFACT_CONTAINER_BUILDER_CREDENTIALS_JSON}" > ${GOOGLE_APPLICATION_CREDENTIALS}
+            gcloud auth activate-service-account --key-file ${GOOGLE_APPLICATION_CREDENTIALS}
+            # # Delete symlink files
+            # find vendor -type l -delete
+            # Build version
+            VERSION=$(date +%Y%m%d)-${CIRCLE_BUILD_NUM}
+            gcloud builds submit . \
+              --project=mercari-us-boston-ml \
+              --config=cloudbuild.yaml \
+              --gcs-log-dir="gs://mercari-artifacts_cloudbuild_logs/logs" \
+              --substitutions="_VERSION=${VERSION},_SERVICE_NAME=${CIRCLE_PROJECT_REPONAME}"
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      # - dep:
+      #     context: org-global
+      # - lint:
+      #     requires:
+      #       - dep
+      #     filters:
+      #       branches:
+      #         ignore: master
+      # - test:
+      #     context: org-global
+      #     requires:
+      #       - dep
+      - docker:
+          context: org-global
+          # requires:
+          #   - lint
+          #   - test
+          filters:
+            branches:
+              only: master

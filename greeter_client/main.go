@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	address     = "localhost:50051"
+	address     = "192.168.99.105:30072"
 	defaultName = "darin is twenty"
 ///	defaultAge = "twenty"
 //	defaultRoommate = 4
