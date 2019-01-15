@@ -99,12 +99,12 @@ jobs:
             gcloud builds submit . \
               --project=mercari-us-boston-ml \
               --config=cloudbuild.yaml \
-              --gcs-log-dir="gs://mercari-artifacts_cloudbuild_logs/logs" \
+            # --gcs-log-dir="gs://mercari-artifacts_cloudbuild_logs/logs" \
               --substitutions="_VERSION=${VERSION},_SERVICE_NAME=${CIRCLE_PROJECT_REPONAME}"
 
 workflows:
   version: 2
-  docker_run:
+  build-and-test:
     jobs:
       # - dep:
            context: org-global
