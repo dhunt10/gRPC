@@ -1,7 +1,7 @@
 version: 2
 defaults: &defaults
   working_directory: /go/src/github.com/kouzoh/mercari-david-ml-test
-
+  working_directory: /go/src/google.golang.org/grpc/examples/helloworld
 # reviewdog: &reviewdog
 #   <<: *defaults
 #   docker:
